@@ -6,8 +6,10 @@ let mostRecentPostOrigin = "None";
 let mostRecentPostID = "None";
 let cloudlink;
 
-let username = ""
-let password = ""
+let username = "funkybot"
+let password = "ThisIsSoFunky"
+
+let rules = "placeholder"
 
 function connectToWebSocket() {
   cloudlink = new WebSocket("wss://server.meower.org");
@@ -37,8 +39,22 @@ function login(username, password) {
   })
 }
 
+function getChat(channel){
+  return fetch(`https://api.meower.org/${channel}`, {
+    method: 'GET',
+    headers: {
+      'Token': token
+    }
+  }).then(response => {
+    if (!response.ok){
+      throw new Error('Network response was not ok');
+    }
+    return response.json();
+  })
+}
+
 function sendMessage(message, channel) {
-  console.log(message);
+  console.log(message, channel);
   let url = 'https://api.meower.org/home';
   if (channel !== 'home') {
     url = `https://api.meower.org/posts/${channel}`;
@@ -81,8 +97,14 @@ function onMessage(event) {
   }
 }
 
-function onPing(sender, channel, id, text){
+async function onPing(sender, channel, id, text){
   console.info(`Received message ${text} from ${sender} in ${channel} with id ${id}`);
+  text = text.toLowerCase().split(" ");
+  console.info(text);
+  if (text[1] == "rules") {
+    console.log(await getChat(`users/${sender}/dm`))
+    sendMessage(rules, (await getChat(`users/${sender}/dm`))["_id"]);
+  }
 }
 
 function handleIncomingPacket(packet) {
@@ -107,8 +129,8 @@ function handleIncomingPacket(packet) {
 
 async function run(){
   await connectToWebSocket();
-  await login(username, password);
-  sendMessage("Hello, world!", "home");
+  await login("funkybot", "ThisIsSoFunky");
+  sendMessage("Hello, world!", "livechat");
 }
 
 run()
